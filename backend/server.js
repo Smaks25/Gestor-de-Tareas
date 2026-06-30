@@ -5,8 +5,8 @@ const jwt = require('jsonwebtoken');
 const db = require('./db');
 
 const app = express();
-const PORT = 5000;
-const SECRET_KEY = 'super_secret_key_para_el_portafolio'; // En producción, usar variables de entorno (.env)
+const PORT = process.env.PORT || 5000;
+const SECRET_KEY = process.env.JWT_SECRET || 'super_secret_key_para_el_portafolio'; // En producción, usar variables de entorno (.env)
 
 // Middleware
 app.use(cors());
@@ -27,8 +27,8 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = `INSERT INTO users (username, password) VALUES (?, ?)`;
-    
-    db.run(sql, [username, hashedPassword], function(err) {
+
+    db.run(sql, [username, hashedPassword], function (err) {
       if (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
           return res.status(400).json({ error: 'El usuario ya existe' });
@@ -94,15 +94,15 @@ app.get('/api/tasks', authenticateToken, (req, res) => {
 // Crear una nueva tarea
 app.post('/api/tasks', authenticateToken, (req, res) => {
   const { title, description, dueDate, priority, status } = req.body;
-  
+
   if (!title) return res.status(400).json({ error: 'El título es requerido' });
 
   const sql = `INSERT INTO tasks (user_id, title, description, dueDate, priority, status) VALUES (?, ?, ?, ?, ?, ?)`;
   const params = [req.user.id, title, description, dueDate, priority || 'Media', status || 'Pendiente'];
 
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) return res.status(500).json({ error: 'Error al crear la tarea' });
-    
+
     // Devolver la tarea creada
     const newTask = { id: this.lastID, user_id: req.user.id, title, description, dueDate, priority, status: status || 'Pendiente' };
     res.status(201).json(newTask);
@@ -117,10 +117,10 @@ app.put('/api/tasks/:id', authenticateToken, (req, res) => {
   const sql = `UPDATE tasks SET title = ?, description = ?, dueDate = ?, priority = ?, status = ? WHERE id = ? AND user_id = ?`;
   const params = [title, description, dueDate, priority, status, taskId, req.user.id];
 
-  db.run(sql, params, function(err) {
+  db.run(sql, params, function (err) {
     if (err) return res.status(500).json({ error: 'Error al actualizar la tarea' });
     if (this.changes === 0) return res.status(404).json({ error: 'Tarea no encontrada o no autorizada' });
-    
+
     res.json({ message: 'Tarea actualizada exitosamente' });
   });
 });
@@ -128,17 +128,17 @@ app.put('/api/tasks/:id', authenticateToken, (req, res) => {
 // Eliminar una tarea
 app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
   const taskId = req.params.id;
-  
+
   const sql = `DELETE FROM tasks WHERE id = ? AND user_id = ?`;
-  db.run(sql, [taskId, req.user.id], function(err) {
+  db.run(sql, [taskId, req.user.id], function (err) {
     if (err) return res.status(500).json({ error: 'Error al eliminar la tarea' });
     if (this.changes === 0) return res.status(404).json({ error: 'Tarea no encontrada o no autorizada' });
-    
+
     res.json({ message: 'Tarea eliminada exitosamente' });
   });
 });
 
 // Iniciar servidor
 app.listen(PORT, () => {
-  console.log(`Servidor Backend corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor Backend corriendo en el puerto ${PORT}`);
 });
