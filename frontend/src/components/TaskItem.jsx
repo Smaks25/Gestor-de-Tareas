@@ -39,24 +39,22 @@ function TaskItem({ task, deleteTask, completeTask, editTask }) {
 
         <div className="d-flex justify-content-end gap-2 border-top pt-3 mt-auto">
           {!isCompleted && (
-            <>
-              <button
-                className="btn btn-sm btn-outline-primary btn-action"
-                onClick={() => editTask(task)}
-                title="Editar"
-              >
-                <i className="bi bi-pencil"></i>
-              </button>
-              
-              <button
-                className="btn btn-sm btn-success btn-action"
-                onClick={() => completeTask(task.id)}
-                title="Marcar como completada"
-              >
-                <i className="bi bi-check-lg"></i>
-              </button>
-            </>
+            <button
+              className="btn btn-sm btn-outline-primary btn-action"
+              onClick={() => editTask(task)}
+              title="Editar"
+            >
+              <i className="bi bi-pencil"></i>
+            </button>
           )}
+          
+          <button
+            className={`btn btn-sm ${isCompleted ? 'btn-outline-warning' : 'btn-success'} btn-action`}
+            onClick={() => completeTask(task.id)}
+            title={isCompleted ? "Desmarcar" : "Marcar como completada"}
+          >
+            <i className={`bi ${isCompleted ? 'bi-arrow-counterclockwise' : 'bi-check-lg'}`}></i>
+          </button>
 
           <button
             className="btn btn-sm btn-outline-danger btn-action"

@@ -3,31 +3,76 @@ import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
 import Login from "../components/Login";
 import Register from "../components/Register";
+import { tasksAPI } from "../services/api";
 
 function Dashboard() {
-  const [tasks, setTasks] = useState(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    return savedTasks ? JSON.parse(savedTasks) : [];
-  });
+  const [tasks, setTasks] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    // Verificar si hay token al cargar
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      fetchTasks();
+    }
+  }, []);
 
-  const addTask = (task) => {
-    setTasks([...tasks, task]);
+  // Recargar tareas si isLoggedIn cambia a true
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchTasks();
+    }
+  }, [isLoggedIn]);
+
+  const fetchTasks = async () => {
+    try {
+      const data = await tasksAPI.getAll();
+      setTasks(data);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      if (error.message.includes("Acceso denegado") || error.message.includes("Token")) {
+        logout();
+      }
+    }
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const addTask = async (task) => {
+    try {
+      const newTask = await tasksAPI.create(task);
+      setTasks([newTask, ...tasks]);
+    } catch (error) {
+      console.error("Error adding task:", error);
+      alert("Error al agregar la tarea");
+    }
   };
 
-  const completeTask = (id) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, status: "Completada" } : task
-      )
-    );
+  const deleteTask = async (id) => {
+    try {
+      await tasksAPI.delete(id);
+      setTasks(tasks.filter((task) => task.id !== id));
+    } catch (error) {
+      console.error("Error deleting task:", error);
+    }
+  };
+
+  const completeTask = async (id) => {
+    const taskToUpdate = tasks.find(t => t.id === id);
+    if (!taskToUpdate) return;
+    
+    const newStatus = taskToUpdate.status === "Completada" ? "Pendiente" : "Completada";
+    
+    try {
+      await tasksAPI.update(id, { ...taskToUpdate, status: newStatus });
+      setTasks(
+        tasks.map((task) =>
+          task.id === id ? { ...task, status: newStatus } : task
+        )
+      );
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
 
   const [editingTask, setEditingTask] = useState(null);
@@ -36,23 +81,29 @@ function Dashboard() {
     setEditingTask(task);
   };
 
-  const updateTask = (updatedTask) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === updatedTask.id ? updatedTask : task
-      )
-    );
-    setEditingTask(null);
+  const updateTask = async (updatedTask) => {
+    try {
+      await tasksAPI.update(updatedTask.id, updatedTask);
+      setTasks(
+        tasks.map((task) =>
+          task.id === updatedTask.id ? updatedTask : task
+        )
+      );
+      setEditingTask(null);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      alert("Error al actualizar la tarea");
+    }
   };
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("Todas");
   const [priorityFilter, setPriorityFilter] = useState("Todas");
 
-  const filteredTasks = tasks.filter((task) => {
+  let filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.title.toLowerCase().includes(search.toLowerCase()) ||
-      task.description.toLowerCase().includes(search.toLowerCase());
+      (task.description && task.description.toLowerCase().includes(search.toLowerCase()));
 
     const matchesStatus =
       statusFilter === "Todas" || task.status === statusFilter;
@@ -63,8 +114,12 @@ function Dashboard() {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  // Ordenar por fecha de vencimiento (fechas más próximas primero)
+  filteredTasks = filteredTasks.sort((a, b) => {
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return new Date(a.dueDate) - new Date(b.dueDate);
+  });
 
   if (!isLoggedIn) {
     return (
@@ -82,7 +137,10 @@ function Dashboard() {
   }
 
   const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
+    setTasks([]);
   };
 
   return (

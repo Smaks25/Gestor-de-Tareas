@@ -1,28 +1,28 @@
 import { useState } from "react";
+import { authAPI } from "../services/api";
 
 function Register({ setShowRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    setError("");
+    setSuccess("");
+    setLoading(true);
 
-    const existingUser = users.find((user) => user.username === username);
-
-    if (existingUser) {
-      alert("El usuario ya existe");
-      return;
+    try {
+      await authAPI.register(username, password);
+      setSuccess("Usuario registrado exitosamente");
+      setTimeout(() => setShowRegister(false), 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    users.push({
-      username,
-      password,
-    });
-
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Usuario registrado");
-    setShowRegister(false);
   };
 
   return (
@@ -36,6 +36,9 @@ function Register({ setShowRegister }) {
             <h2 className="card-title fw-bold">Registro</h2>
             <p className="text-muted">Crea una cuenta para empezar</p>
           </div>
+
+          {error && <div className="alert alert-danger py-2">{error}</div>}
+          {success && <div className="alert alert-success py-2">{success}</div>}
 
           <form onSubmit={handleRegister}>
             <div className="form-floating mb-3">
@@ -64,8 +67,13 @@ function Register({ setShowRegister }) {
               <label htmlFor="floatingRegPassword">Contraseña</label>
             </div>
 
-            <button type="submit" className="btn btn-success w-100 mb-3 py-2" style={{ borderRadius: "0.5rem" }}>
-              <i className="bi bi-check-circle me-2"></i> Registrarse
+            <button type="submit" className="btn btn-success w-100 mb-3 py-2" style={{ borderRadius: "0.5rem" }} disabled={loading || success}>
+              {loading ? (
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              ) : (
+                <i className="bi bi-check-circle me-2"></i>
+              )}
+              {loading ? "Registrando..." : "Registrarse"}
             </button>
 
             <div className="text-center mt-3 border-top pt-3">

@@ -1,21 +1,26 @@
 import { useState } from "react";
+import { authAPI } from "../services/api";
 
 function Login({ setIsLoggedIn, setShowRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    setError("");
+    setLoading(true);
 
-    const user = users.find(
-      (u) => u.username === username && u.password === password
-    );
-
-    if (user) {
+    try {
+      const data = await authAPI.login(username, password);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       setIsLoggedIn(true);
-    } else {
-      alert("Credenciales incorrectas");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,6 +35,8 @@ function Login({ setIsLoggedIn, setShowRegister }) {
             <h2 className="card-title fw-bold">Iniciar Sesión</h2>
             <p className="text-muted">Bienvenido de nuevo a tu Gestor de Tareas</p>
           </div>
+
+          {error && <div className="alert alert-danger py-2">{error}</div>}
 
           <form onSubmit={handleLogin}>
             <div className="form-floating mb-3">
@@ -58,8 +65,13 @@ function Login({ setIsLoggedIn, setShowRegister }) {
               <label htmlFor="floatingPassword">Contraseña</label>
             </div>
 
-            <button type="submit" className="btn btn-primary-custom w-100 mb-3 py-2">
-              <i className="bi bi-box-arrow-in-right me-2"></i> Ingresar
+            <button type="submit" className="btn btn-primary-custom w-100 mb-3 py-2" disabled={loading}>
+              {loading ? (
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              ) : (
+                <i className="bi bi-box-arrow-in-right me-2"></i>
+              )}
+              {loading ? "Ingresando..." : "Ingresar"}
             </button>
 
             <div className="text-center mt-3 border-top pt-3">
