@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Función auxiliar para manejar las respuestas de la API
 const handleResponse = async (response) => {
@@ -27,7 +27,7 @@ export const authAPI = {
     });
     return handleResponse(response);
   },
-  
+
   register: async (username, password) => {
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
@@ -45,7 +45,7 @@ export const tasksAPI = {
     });
     return handleResponse(response);
   },
-  
+
   create: async (task) => {
     const response = await fetch(`${API_URL}/tasks`, {
       method: 'POST',
@@ -54,7 +54,7 @@ export const tasksAPI = {
     });
     return handleResponse(response);
   },
-  
+
   update: async (id, task) => {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       method: 'PUT',
@@ -63,7 +63,7 @@ export const tasksAPI = {
     });
     return handleResponse(response);
   },
-  
+
   delete: async (id) => {
     const response = await fetch(`${API_URL}/tasks/${id}`, {
       method: 'DELETE',
