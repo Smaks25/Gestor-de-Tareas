@@ -6,7 +6,11 @@ const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const SECRET_KEY = process.env.JWT_SECRET || 'super_secret_key_para_el_portafolio'; // En producción, usar variables de entorno (.env)
+const SECRET_KEY = process.env.JWT_SECRET;
+
+if (!SECRET_KEY) {
+  throw new Error('Falta la variable de entorno JWT_SECRET');
+}
 
 // Middleware
 app.use(cors());
