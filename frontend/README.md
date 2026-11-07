@@ -1,16 +1,69 @@
-# React + Vite
+# Frontend – Gestor de Tareas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación de una sola página hecha con React y Vite que consume la API del backend.
 
-Currently, two official plugins are available:
+## Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 · React Router
+- Vite
+- Bootstrap 5
+- ESLint
 
-## React Compiler
+## Variables de entorno
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Variable | Descripción |
+|----------|-------------|
+| `VITE_API_URL` | URL base de la API, terminada en `/api` |
 
-## Expanding the ESLint configuration
+En local, crea `frontend/.env.local`:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```
+VITE_API_URL=http://localhost:5000/api
+```
+
+En producción (Vercel) se configura en **Settings → Environment Variables**.
+
+## Cómo correrlo
+
+Necesitas Node.js 20 o superior y el backend corriendo.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+La app queda en http://localhost:5173
+
+## Scripts
+
+| Comando | Descripción |
+|---------|-------------|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Genera la versión de producción |
+| `npm run preview` | Sirve localmente la versión de producción |
+| `npm run lint` | Revisa el código con ESLint |
+
+## Estructura
+
+```
+src/
+├── services/
+│   └── api.js   # Llamadas a la API (autenticación y tareas)
+└── [completa con tus carpetas: pages, components, etc.]
+```
+
+## Cómo funciona
+
+- Las llamadas a la API están centralizadas en `src/services/api.js`.
+- Al iniciar sesión, el token JWT se guarda en `localStorage` y se envía en el encabezado `Authorization` en cada petición a las rutas de tareas.
+- [Describe en una o dos líneas cómo proteges las rutas o cómo navegas entre pantallas.]
+
+## Despliegue
+
+Desplegado en Vercel: https://gestor-de-tareas-navy.vercel.app/
+
+## Mejoras pendientes
+
+- Guardar el token en una cookie `httpOnly` en lugar de `localStorage`
+- Pruebas de componentes
